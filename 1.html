@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Selector</title>
+    <style>
+
+
+
+
+
+        body {
+            background-color: #F8C8DC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            position: relative; /* Make the body a relative positioning context */
+        }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 40px; /* Increase spacing between cells */
+        }
+
+        td {
+            padding: 80px; /* Increase padding for thicker squares */
+            border: 10px solid #000000; /* Thicker border */
+            text-align: center;
+            border-radius: 15px; /* Add rounded corners */
+            position: relative;
+        }
+
+        a {
+            text-decoration: none;
+            color: #000000;
+            font-weight: bold;
+            font-size: 18px;
+            font-family: 'Brush Script MT', cursive;
+            display: block; /* Make the link a block-level element to cover the entire cell */
+            height: 80%; /* Adjust the height of the link */
+        }
+
+        a:hover {
+            background-color: #ffffff; /* Highlight on hover with white background */
+        }
+
+        .bottom-right-image {
+            position: fixed;
+            bottom: 10px; /* Adjust as needed to leave some space from the bottom */
+            right: 10px; /* Adjust as needed to leave some space from the right */
+            max-width: 30%; /* Adjust the width as needed */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        .small-text {
+            font-size: 20px; /* Adjust the font size for the small text */
+            margin-top: 10px; /* Add margin to separate it from the above content */
+        }
+
+
+        .next-button {
+        height:5%;
+        width:5%;
+        text-decoration: none;
+        color: #ffffff;
+        background-color: #ff0000; /* Green background color */
+        padding: 8px 15px !important; /* Adjust padding to make the button smaller */
+        border-radius: 5px; /* Rounded corners */
+        font-weight: bold;
+        display: inline-block; /* Display as inline-block to respect padding */
+        margin-top: 700px; /* Adjust the margin as needed */
+        font-size: 14px !important; /* Adjust font size to make the text smaller */
+        text-align: center; /* Center-align text */
+    }
+</style>
+    </style>
+</head>
+<body>
+
+    <table>
+        <tr>
+            <td colspan="2">
+                <a href="#" onclick="optionSelected(1)">🥱TIKTOK SESSION YUHUU !! 💤</a>
+                <div class="small-text">This is a list of all the TikToks I always wanted to send you since we stopped talking</div>
+                <div class="small-text">For your free time, instead of talking to boys, watch those :)</div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#" onclick="optionSelected(2)">😈 LAMING TOGETHER ! 😈</a>
+                <div class="small-text">A gallery of some of the moments we spent together</div>
+                <div class="small-text">Some of the most lame, happy  and romantic moments i had with you</div>
+            </td>
+     
+            <td><a href="#" onclick="optionSelected(3)">SAD KLARA 😭😭😭😭</a>
+            <div class="small-text">For when you feel lonely and sad</div>
+            <div class="small-text">remember that i was and i am here</div>
+        </tr>
+        <tr>
+            <td colspan="2"><a href="#" onclick="optionSelected(4)">Policy of not sharing</a>
+                <div class="small-text">What is mine stays mine.</div>
+        </tr>
+    </table>
+
+    <!-- Add your image source to the src attribute -->
+    <a href="2.html" class="next-button">The end (click me)</a>
+    <script>
+        function optionSelected(option) {
+            // You can add your logic here for what should happen when an option is selected
+            console.log("Option " + option + " selected");
+        }
+    </script>
+
+</body>
+</html>
