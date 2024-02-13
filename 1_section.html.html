@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Animation Page</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif; /* Change the font family as desired */
+        }
+    
+        canvas {
+            display: block;
+            position: absolute;
+        }
+    
+        .clickable-sentence {
+            cursor: pointer;
+            position: absolute;
+            font-size: 18px;
+            text-decoration: none;
+            z-index: 100; /* Ensure sentences appear on top of the canvas */
+            color: #333; /* Set the text color */
+            transition: color 0.3s ease, text-shadow 0.3s ease; /* Add transition for smoother color change */
+        }
+    
+        .clickable-sentence a {
+            text-decoration: none;
+            color: inherit;
+        }
+    
+        .clickable-sentence:hover {
+            color: #555; /* Change color on hover */
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); /* Add a subtle text shadow on hover */
+        }
+
+        .textbox {
+            position: absolute;
+            bottom: 10px; /* Adjust the distance from the bottom */
+            right: 10px; /* Adjust the distance from the right */
+            width: 600px;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            text-align: center; /* Center-align text */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <div class="textbox">
+        <p>I wish i could add all the tiktoks i have saved but i have not much space.
+            I hope you enjoied those but the main purpose was to make you understand that there are no women in my fyp...
+            and if there were no one would catch my attention cause it's all on you, just like my eyes.
+            P.S. OPEN IT FROM THE PHONE FOR THE TIKTOKS AT LEAST.
+        </p>
+    </div>
+
+    <script>
+        var c = document.getElementById("c");
+        var ctx = c.getContext("2d");
+        var cH;
+        var cW;
+        var bgColor = "#FF6138";
+        var animations = [];
+        var circles = [];
+
+        var colorPicker = (function() {
+            var colors = ["#FF6138", "#FFBE53", "#2980B9", "#282741"];
+            var index = 0;
+            function next() {
+                index = index++ < colors.length-1 ? index : 0;
+                return colors[index];
+            }
+            function current() {
+                return colors[index]
+            }
+            return {
+                next: next,
+                current: current
+            }
+        })();
+
+        function removeAnimation(animation) {
+            var index = animations.indexOf(animation);
+            if (index > -1) animations.splice(index, 1);
+        }
+
+        function calcPageFillRadius(x, y) {
+            var l = Math.max(x - 0, cW - x);
+            var h = Math.max(y - 0, cH - y);
+            return Math.sqrt(Math.pow(l, 2) + Math.pow(h, 2));
+        }
+
+        function addClickListeners() {
+            document.addEventListener("touchstart", handleEvent);
+            document.addEventListener("mousedown", handleEvent);
+        }
+
+        function handleEvent(e) {
+            if (e.touches) { 
+                e.preventDefault();
+                e = e.touches[0];
+            }
+            var currentColor = colorPicker.current();
+            var nextColor = colorPicker.next();
+            var targetR = calcPageFillRadius(e.pageX, e.pageY);
+            var rippleSize = Math.min(200, (cW * .4));
+            var minCoverDuration = 750;
+            
+            var pageFill = new Circle({
+                x: e.pageX,
+                y: e.pageY,
+                r: 0,
+                fill: nextColor
+            });
+            var fillAnimation = anime({
+                targets: pageFill,
+                r: targetR,
+                duration: Math.max(targetR / 2 , minCoverDuration),
+                easing: "easeOutQuart",
+                complete: function(){
+                    bgColor = pageFill.fill;
+                    removeAnimation(fillAnimation);
+                }
+            });
+            
+            var ripple = new Circle({
+                x: e.pageX,
+                y: e.pageY,
+                r: 0,
+                fill: currentColor,
+                stroke: {
+                    width: 3,
+                    color: currentColor
+                },
+                opacity: 1
+            });
+            var rippleAnimation = anime({
+                targets: ripple,
+                r: rippleSize,
+                opacity: 0,
+                easing: "easeOutExpo",
+                duration: 900,
+                complete: removeAnimation
+            });
+            
+            var particles = [];
+            for (var i = 0; i < 32; i++) {
+                var particle = new Circle({
+                    x: e.pageX,
+                    y: e.pageY,
+                    fill: currentColor,
+                    r: anime.random(24, 48)
+                });
+                particles.push(particle);
+            }
+            var particlesAnimation = anime({
+                targets: particles,
+                x: function(particle) {
+                    return particle.x + anime.random(rippleSize, -rippleSize);
+                },
+                y: function(particle) {
+                    return particle.y + anime.random(rippleSize * 1.15, -rippleSize * 1.15);
+                },
+                r: 0,
+                easing: "easeOutExpo",
+                duration: anime.random(1000, 1300),
+                complete: removeAnimation
+            });
+            animations.push(fillAnimation, rippleAnimation, particlesAnimation);
+        }
+
+        function extend(a, b) {
+            for (var key in b) {
+                if (b.hasOwnProperty(key)) {
+                    a[key] = b[key];
+                }
+            }
+            return a;
+        }
+
+        var Circle = function(opts) {
+            extend(this, opts);
+        }
+
+        Circle.prototype.draw = function() {
+            ctx.globalAlpha = this.opacity || 1;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
+            if (this.stroke) {
+                ctx.strokeStyle = this.stroke.color;
+                ctx.lineWidth = this.stroke.width;
+                ctx.stroke();
+            }
+            if (this.fill) {
+                ctx.fillStyle = this.fill;
+                ctx.fill();
+            }
+            ctx.closePath();
+            ctx.globalAlpha = 1;
+        }
+
+        var animate = anime({
+            duration: Infinity,
+            update: function() {
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, cW, cH);
+                animations.forEach(function(anim) {
+                    anim.animatables.forEach(function(animatable) {
+                        animatable.target.draw();
+                    });
+                });
+            }
+        });
+
+        var resizeCanvas = function() {
+            cW = window.innerWidth;
+            cH = window.innerHeight;
+            c.width = cW * devicePixelRatio;
+            c.height = cH * devicePixelRatio;
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+        };
+
+        (function init() {
+            resizeCanvas();
+            if (window.CP) {
+                window.CP.PenTimer.MAX_TIME_IN_LOOP_WO_EXIT = 6000; 
+            }
+            window.addEventListener("resize", resizeCanvas);
+            addClickListeners();
+            if (!!window.location.pathname.match(/fullcpgrid/)) {
+                startFauxClicking();
+            }
+            handleInactiveUser();
+        })();
+
+        function handleInactiveUser() {
+            var inactive = setTimeout(function() {
+                fauxClick(cW/2, cH/2);
+            }, 2000);
+            
+            function clearInactiveTimeout() {
+                clearTimeout(inactive);
+                document.removeEventListener("mousedown", clearInactiveTimeout);
+                document.removeEventListener("touchstart", clearInactiveTimeout);
+            }
+            
+            document.addEventListener("mousedown", clearInactiveTimeout);
+            document.addEventListener("touchstart", clearInactiveTimeout);
+        }
+
+        function startFauxClicking() {
+            setTimeout(function() {
+                fauxClick(anime.random(cW * .2, cW * .8), anime.random(cH * .2, cH * .8));
+                startFauxClicking();
+            }, anime.random(200, 900));
+        }
+
+        function fauxClick(x, y) {
+            var fauxClick = new Event("mousedown");
+            fauxClick.pageX = x;
+            fauxClick.pageY = y;
+            document.dispatchEvent(fauxClick);
+        }
+        function createClickableSentence(text, x, y, onClick, url, delay) {
+    var sentence = document.createElement("div");
+    sentence.className = "clickable-sentence";
+    sentence.innerHTML = `<a href="${url}" target="_blank">${text}</a>`;
+    sentence.style.left = x + "px";
+    sentence.style.top = y + "px";
+    sentence.addEventListener("click", function(event) {
+        event.preventDefault(); // Prevent the default behavior of the link
+        setTimeout(function() {
+            onClick();
+            window.location.href = url; // Redirect to the link after the delay
+        }, delay);
+    });
+    document.body.appendChild(sentence);
+}
+
+// Example usage with a 2-second (2000 milliseconds) delay
+createClickableSentence("I hate my tiktok page so fucking much", 50, 50, function() {
+    console.log("You clicked the first sentence!");
+    // Add any additional actions you want here
+}, "https://vm.tiktok.com/ZGeSdDaM9/", 700);
+
+createClickableSentence("I would puke and you know that", 50, 90, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdUoeQ/", 700);
+
+createClickableSentence("https://vm.tiktok.com/ZGeSdUXm5/", 50, 130, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdUXm5/", 700);
+
+createClickableSentence("Its not fair..", 50, 170, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdaU2o/", 700);
+
+createClickableSentence("https://vm.tiktok.com/ZGeSdQG9J/", 50, 210, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdQG9J/", 700);
+
+createClickableSentence("I wanted to buy those for you on valentine but they would never arrive for this month cause slovakia sucks", 50, 250, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdUyKF/", 700);
+
+createClickableSentence("I imagined you wearing this and i bursted out of laugh so hard not gonna lie", 50, 290, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdfNPH/", 700);
+
+createClickableSentence("Me everytime", 50, 330, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdACFv/", 700);
+
+createClickableSentence("https://vm.tiktok.com/ZGeSdHDfM/", 50, 370, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdHDfM/", 700);
+
+createClickableSentence("I ask this everyday since we broke up , i know the reply but there is nothing i can do", 50, 410, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdS8mM/", 700);
+
+createClickableSentence("I wanted to show our kids all the trips we did together and how happy we were", 50, 450, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdPoCk/ ", 700);
+
+createClickableSentence("It made me cry for hours knowing if i will ever have a child it will not be your and will not have your big blue eyes...", 50, 490, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdUPTu/", 700);
+
+createClickableSentence("https://vm.tiktok.com/ZGeSd68YW/", 50, 530, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSd68YW/", 700);
+
+createClickableSentence("This reminded me of you cause you were so crazy and childish with me that i loved it so freaking much", 50, 570, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdCvU6/", 700);
+
+createClickableSentence("Us on our way to meet eachothers everytime", 50, 610, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdrFHk/", 700);
+
+createClickableSentence("Me driving your car 💀", 50, 650, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdUwhL/", 700);
+
+createClickableSentence("A sort of me looking how you get prettier day by day..and i can just watch..", 50, 690, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdap98/", 700);
+
+createClickableSentence("https://vm.tiktok.com/ZGeSdQWxm/", 50, 730, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdQWxm/", 700);
+
+createClickableSentence("If we would ever failed in austria, remember , we could have done this", 50, 770, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdXrd1/", 700);
+
+createClickableSentence("I wish so much i can do this with you", 50, 810, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSd5n4J/", 700);
+
+
+createClickableSentence("https://vm.tiktok.com/ZGeSdjoNW/", 50, 850, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdjoNW/", 700);
+
+createClickableSentence("You are damn perfect my girl", 1000, 50, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSd4rGp/", 700);
+
+createClickableSentence("True story", 1000, 90, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdSdaG/", 700);
+
+createClickableSentence("Luckily we didnt go together , fiù", 1000, 130, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSd5TgB/", 700);
+
+createClickableSentence("I know how to skii , You : ", 1000, 170, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdS75k/", 700);
+
+createClickableSentence("I wanted to build so many memories with you", 1000, 210, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdygqG/", 700);
+
+createClickableSentence("Us in another life", 1000, 250, function() {
+    console.log("You clicked the second sentence!");
+}, "https://vm.tiktok.com/ZGeSdrhBL/", 700);
+
+
+
+
+    </script>
+</body>
+</html>
